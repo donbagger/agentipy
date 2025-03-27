@@ -23,6 +23,7 @@ AgentiPy bridges the gap between AI agents and blockchain applications. It provi
 *   **Comprehensive Toolset:** Provides tools for token trading, NFT management, DeFi interactions, and more.
 *   **Extensible Design:** Allows developers to create custom protocols and actions.
 *   **Coingecko Integration**: Enhanced with new tooling to explore trending tokens, prices, and new pools
+*   **Multi-Chain DEX Analytics**: Access real-time liquidity pool, token, and trading data with OHLCV price charts across 20+ blockchain networks via DexPaprika
 *   **Streamlined Development:** Provides essential utility functions such as price fetching, balance checks, and transaction confirmation.
 
 ## 📦 Installation and Setup
@@ -64,15 +65,12 @@ Follow these steps to install and set up AgentiPy:
 
 AgentiPy supports a diverse set of protocols, each with specific actions. This table provides a quick reference:
 
-## 🛠️ Supported Protocols and Tools
-
-AgentiPy supports a diverse set of protocols, each with specific actions. This table provides a quick reference:
-
 | Protocol       | Blockchain | Actions                                                        | GitHub Tool Link                                                                            |
 | :------------- | :--------- | :------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
 | Jupiter        | Solana     | Token swaps, direct routing, stake SOL                        | [Jupiter Swap Tool](https://github.com/niceberginc/agentipy/blob/main/agentipy/tools/stake_with_jup.py) |
 | PumpFun        | Solana     | Buy/sell tokens, launch tokens, retrieve/calculate pump curve states | [PumpFun Buy Tool](https://github.com/niceberginc/agentipy/blob/main/agentipy/tools/use_pumpfun.py) |
 | Raydium        | Solana     | Buy/sell tokens, provide liquidity                             | [Raydium Trade Tool](https://github.com/niceberginc/agentipy/blob/main/agentipy/tools/use_raydium.py) |
+| DexPaprika     | Multi-Chain | Cross-chain DEX analytics, OHLCV price data, pool metrics, token performance | [DexPaprika Tool](https://github.com/niceberginc/agentipy/blob/main/agentipy/tools/use_dexpaprika.py) |
 | Metaplex       | Solana     | NFT minting, collection deployment, metadata/royalty management| [Metaplex Mint Tool](https://github.com/niceberginc/agentipy/blob/main/agentipy/tools/use_metaplex.py) |
 | DexScreener    | Solana     | Get token data by ticker/address                               | [DexScreener Data Tool](https://github.com/niceberginc/agentipy/blob/main/agentipy/tools/get_token_data.py) |
 | Helius         | Solana     | Fetch balances, NFT mint lists, events, webhooks             | [Helius Balance Tool](https://github.com/niceberginc/agentipy/blob/main/agentipy/tools/use_helius.py) |
@@ -557,3 +555,81 @@ AgentiPy is licensed under the MIT License, ensuring open access and flexibility
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 [Become a contributor!](https://github.com/niceberginc/agentipy/blob/main/CONTRIBUTING.md) Open an issue or submit a pull request to join us!
+
+## DexPaprika Integration Example
+
+```python
+from agentipy.agent import SolanaAgentKit
+import asyncio
+from datetime import datetime, timedelta
+
+async def main():
+    """
+    Example: Using DexPaprika API to analyze cross-chain DEX data and OHLCV price charts.
+    """
+    # Initialize SolanaAgentKit (no private key needed for read-only operations)
+    agent = SolanaAgentKit(generate_wallet=True)
+    
+    # Get list of supported networks
+    networks = await agent.get_dexpaprika_networks()
+    print(f"DexPaprika supports {len(networks)} blockchain networks")
+    
+    # Get top pools by volume across all networks
+    top_pools = await agent.get_dexpaprika_top_pools(limit=5)
+    print("\nTop 5 Liquidity Pools Across All Networks:")
+    for pool in top_pools.get('pools', []):
+        print(f"- {pool.get('dex_name')} on {pool.get('chain')}: ${pool.get('volume_usd'):,.2f} 24h volume")
+    
+    # Get Solana-specific pools
+    solana_pools = await agent.get_dexpaprika_network_pools('solana', limit=3)
+    print("\nTop 3 Solana Liquidity Pools:")
+    for pool in solana_pools.get('pools', []):
+        tokens = [t.get('symbol') for t in pool.get('tokens', [])]
+        token_pair = '/'.join(tokens)
+        print(f"- {token_pair} on {pool.get('dex_name')}: ${pool.get('volume_usd'):,.2f} volume")
+    
+    # Get OHLCV price data for a specific pool
+    if solana_pools.get('pools') and len(solana_pools['pools']) > 0:
+        pool = solana_pools['pools'][0]
+        pool_address = pool.get('id')
+        
+        # Get 30 days of OHLCV data with daily interval
+        end_date = datetime.now().strftime("%Y-%m-%d")
+        start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+        
+        print(f"\nFetching 30 days of OHLCV price data for {'/'.join([t.get('symbol') for t in pool.get('tokens', [])])} pool:")
+        ohlcv_data = await agent.get_dexpaprika_pool_ohlcv(
+            'solana', 
+            pool_address, 
+            start=start_date,
+            end=end_date,
+            interval="24h",
+            limit=10
+        )
+        
+        # Display OHLCV data points for trading analysis
+        ohlcv_points = ohlcv_data.get('ohlcv', [])
+        for point in ohlcv_points:
+            print(f"Date: {point.get('time_open')} - Open: ${point.get('open'):,.2f}, "
+                  f"High: ${point.get('high'):,.2f}, Low: ${point.get('low'):,.2f}, "
+                  f"Close: ${point.get('close'):,.2f}, Volume: ${point.get('volume'):,.2f}")
+    
+    # Search for a specific token
+    search_results = await agent.search_dexpaprika("USDC")
+    print(f"\nFound {len(search_results.get('tokens', []))} tokens matching 'USDC'")
+    
+    # If we have search results, get pool data for the first token
+    if search_results.get('tokens') and len(search_results['tokens']) > 0:
+        token = search_results['tokens'][0]
+        token_pools = await agent.get_dexpaprika_token_pools(
+            token.get('chain'), 
+            token.get('id'), 
+            limit=3
+        )
+        print(f"\nTop Pools for {token.get('name')} ({token.get('symbol')}):")
+        for pool in token_pools.get('pools', []):
+            print(f"- Pool on {pool.get('dex_name')}: ${pool.get('volume_usd'):,.2f} volume")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```

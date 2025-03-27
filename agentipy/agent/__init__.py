@@ -2252,7 +2252,7 @@ class SolanaAgentKit:
 
     async def get_latest_pools(self):
         """
-        Get the latest pools from CoinGecko for the Solana network.
+        Get the latest pools from CoinGecko.
 
         Returns:
             dict: Latest pools data.
@@ -2262,7 +2262,227 @@ class SolanaAgentKit:
             return await CoingeckoManager.get_latest_pools(self)
         except Exception as e:
             raise SolanaAgentKitError(f"Failed to fetch latest pools: {e}")
-        
+            
+    
+    async def get_dexpaprika_networks(self):
+        """
+        Retrieve a list of all supported blockchain networks from DexPaprika.
+
+        Returns:
+            dict: List of supported networks with metadata.
+        """
+        from agentipy.tools.use_dexpaprika import DexPaprikaManager
+        try:
+            return await DexPaprikaManager.get_networks(self)
+        except Exception as e:
+            raise SolanaAgentKitError(f"Failed to fetch DexPaprika networks: {e}")
+            
+    async def get_dexpaprika_network_dexes(self, network: str, page: int = 0, limit: int = 10, sort: str = "desc"):
+        """
+        Get a list of available DEXes on a specific network from DexPaprika.
+
+        Args:
+            network (str): Network ID (e.g., ethereum, solana).
+            page (int, optional): Page number for pagination. Defaults to 0.
+            limit (int, optional): Number of items per page. Defaults to 10.
+            sort (str, optional): Sort order. Defaults to "desc".
+
+        Returns:
+            dict: List of DEXes on the specified network.
+        """
+        from agentipy.tools.use_dexpaprika import DexPaprikaManager
+        try:
+            return await DexPaprikaManager.get_network_dexes(self, network, page, limit, sort)
+        except Exception as e:
+            raise SolanaAgentKitError(f"Failed to fetch DexPaprika network DEXes: {e}")
+            
+    async def get_dexpaprika_top_pools(self, order_by: str = "volume_usd", sort: str = "desc", page: int = 0, limit: int = 10):
+        """
+        Get a paginated list of top liquidity pools from all networks via DexPaprika.
+
+        Args:
+            order_by (str, optional): Field to order by. Defaults to "volume_usd".
+                Options: "volume_usd", "price_usd", "transactions", "last_price_change_usd_24h", "created_at".
+            sort (str, optional): Sort order. Defaults to "desc".
+                Options: "asc", "desc".
+            page (int, optional): Page number for pagination. Defaults to 0.
+            limit (int, optional): Number of items per page. Defaults to 10.
+
+        Returns:
+            dict: List of top liquidity pools with price data and tokens.
+        """
+        from agentipy.tools.use_dexpaprika import DexPaprikaManager
+        try:
+            return await DexPaprikaManager.get_top_pools(self, order_by, sort, page, limit)
+        except Exception as e:
+            raise SolanaAgentKitError(f"Failed to fetch DexPaprika top pools: {e}")
+            
+    async def get_dexpaprika_network_pools(self, network: str, order_by: str = "volume_usd", sort: str = "desc", page: int = 0, limit: int = 10):
+        """
+        Get a list of top liquidity pools on a specific network from DexPaprika.
+
+        Args:
+            network (str): Network ID (e.g., ethereum, solana).
+            order_by (str, optional): Field to order by. Defaults to "volume_usd".
+                Options: "volume_usd", "price_usd", "transactions", "last_price_change_usd_24h", "created_at".
+            sort (str, optional): Sort order. Defaults to "desc".
+                Options: "asc", "desc".
+            page (int, optional): Page number for pagination. Defaults to 0.
+            limit (int, optional): Number of items per page. Defaults to 10.
+
+        Returns:
+            dict: List of top liquidity pools for the specified network.
+        """
+        from agentipy.tools.use_dexpaprika import DexPaprikaManager
+        try:
+            return await DexPaprikaManager.get_network_pools(self, network, order_by, sort, page, limit)
+        except Exception as e:
+            raise SolanaAgentKitError(f"Failed to fetch DexPaprika network pools: {e}")
+            
+    async def get_dexpaprika_dex_pools(self, network: str, dex: str, order_by: str = "volume_usd", sort: str = "desc", page: int = 0, limit: int = 10):
+        """
+        Get top pools on a specific DEX within a network from DexPaprika.
+
+        Args:
+            network (str): Network ID (e.g., ethereum, solana).
+            dex (str): DEX identifier.
+            order_by (str, optional): Field to order by. Defaults to "volume_usd".
+                Options: "volume_usd", "price_usd", "transactions", "last_price_change_usd_24h", "created_at".
+            sort (str, optional): Sort order. Defaults to "desc".
+                Options: "asc", "desc".
+            page (int, optional): Page number for pagination. Defaults to 0.
+            limit (int, optional): Number of items per page. Defaults to 10.
+
+        Returns:
+            dict: List of top pools for the specified DEX with price data.
+        """
+        from agentipy.tools.use_dexpaprika import DexPaprikaManager
+        try:
+            return await DexPaprikaManager.get_dex_pools(self, network, dex, order_by, sort, page, limit)
+        except Exception as e:
+            raise SolanaAgentKitError(f"Failed to fetch DexPaprika DEX pools: {e}")
+            
+    async def get_dexpaprika_pool_details(self, network: str, pool_address: str, inversed: bool = False):
+        """
+        Get detailed information about a specific pool on a network from DexPaprika.
+
+        Args:
+            network (str): Network ID (e.g., ethereum, solana).
+            pool_address (str): Pool address or identifier.
+            inversed (bool, optional): Whether to invert the price ratio. Defaults to False.
+
+        Returns:
+            dict: Detailed information about the specified pool including token pairs,
+                current price data, and volume metrics across multiple time frames.
+        """
+        from agentipy.tools.use_dexpaprika import DexPaprikaManager
+        try:
+            return await DexPaprikaManager.get_pool_details(self, network, pool_address, inversed)
+        except Exception as e:
+            raise SolanaAgentKitError(f"Failed to fetch DexPaprika pool details: {e}")
+            
+    async def get_dexpaprika_token_details(self, network: str, token_address: str):
+        """
+        Get detailed information about a specific token on a network from DexPaprika.
+
+        Args:
+            network (str): Network ID (e.g., ethereum, solana).
+            token_address (str): Token address or identifier.
+
+        Returns:
+            dict: Detailed information about the specified token including
+                latest price, metadata, status, and recent summary metrics.
+        """
+        from agentipy.tools.use_dexpaprika import DexPaprikaManager
+        try:
+            return await DexPaprikaManager.get_token_details(self, network, token_address)
+        except Exception as e:
+            raise SolanaAgentKitError(f"Failed to fetch DexPaprika token details: {e}")
+            
+    async def get_dexpaprika_token_pools(self, network: str, token_address: str, address: Optional[str] = None, order_by: str = "volume_usd", sort: str = "desc", page: int = 0, limit: int = 10):
+        """
+        Get a list of top liquidity pools for a specific token on a network from DexPaprika.
+
+        Args:
+            network (str): Network ID (e.g., ethereum, solana).
+            token_address (str): Token address or identifier.
+            address (str, optional): Filter pools that contain this additional token address. Defaults to None.
+            order_by (str, optional): Field to order by. Defaults to "volume_usd".
+                Options: "volume_usd", "price_usd", "transactions", "last_price_change_usd_24h", "created_at".
+            sort (str, optional): Sort order. Defaults to "desc".
+                Options: "asc", "desc".
+            page (int, optional): Page number for pagination. Defaults to 0.
+            limit (int, optional): Number of items per page. Defaults to 10.
+
+        Returns:
+            dict: List of top liquidity pools for the specified token.
+        """
+        from agentipy.tools.use_dexpaprika import DexPaprikaManager
+        try:
+            return await DexPaprikaManager.get_token_pools(self, network, token_address, address, order_by, sort, page, limit)
+        except Exception as e:
+            raise SolanaAgentKitError(f"Failed to fetch DexPaprika token pools: {e}")
+            
+    async def get_dexpaprika_pool_ohlcv(self, network: str, pool_address: str, start: str, end: Optional[str] = None, interval: str = "24h", inversed: bool = False, limit: int = 1):
+        """
+        Get OHLCV (Open-High-Low-Close-Volume) data for a specific pool from DexPaprika.
+
+        Args:
+            network (str): Network ID (e.g., ethereum, solana).
+            pool_address (str): Pool address or identifier.
+            start (str): Start time for historical data (ISO-8601, yyyy-mm-dd, or Unix timestamp).
+            end (str, optional): End time for historical data (max 1 year from start). Defaults to None.
+            interval (str, optional): Interval granularity for OHLCV data. Defaults to "24h".
+                Options: "1m", "5m", "10m", "15m", "30m", "1h", "6h", "12h", "24h".
+            inversed (bool, optional): Whether to invert the price ratio in OHLCV calculations. Defaults to False.
+            limit (int, optional): Number of data points to retrieve (max 366). Defaults to 1.
+
+        Returns:
+            dict: OHLCV data for the specified pool.
+        """
+        from agentipy.tools.use_dexpaprika import DexPaprikaManager
+        try:
+            return await DexPaprikaManager.get_pool_ohlcv(self, network, pool_address, start, end, interval, inversed, limit)
+        except Exception as e:
+            raise SolanaAgentKitError(f"Failed to fetch DexPaprika pool OHLCV data: {e}")
+            
+    async def get_dexpaprika_pool_transactions(self, network: str, pool_address: str, page: int = 0, limit: int = 10, cursor: Optional[str] = None):
+        """
+        Get transactions of a pool on a network from DexPaprika.
+
+        Args:
+            network (str): Network ID (e.g., ethereum, solana).
+            pool_address (str): Pool address or identifier.
+            page (int, optional): Page number for pagination. Defaults to 0.
+            limit (int, optional): Number of items per page. Defaults to 10.
+            cursor (str, optional): Transaction ID used for cursor-based pagination. Defaults to None.
+
+        Returns:
+            dict: List of transactions for the specified pool.
+        """
+        from agentipy.tools.use_dexpaprika import DexPaprikaManager
+        try:
+            return await DexPaprikaManager.get_pool_transactions(self, network, pool_address, page, limit, cursor)
+        except Exception as e:
+            raise SolanaAgentKitError(f"Failed to fetch DexPaprika pool transactions: {e}")
+            
+    async def search_dexpaprika(self, query: str):
+        """
+        Search for tokens, pools, and DEXes by name or identifier on DexPaprika.
+
+        Args:
+            query (str): Search term (e.g., "uniswap", "bitcoin", or a token address).
+
+        Returns:
+            dict: Search results containing matching tokens, pools, and DEXes.
+        """
+        from agentipy.tools.use_dexpaprika import DexPaprikaManager
+        try:
+            return await DexPaprikaManager.search(self, query)
+        except Exception as e:
+            raise SolanaAgentKitError(f"Failed to search DexPaprika: {e}")
+            
+
     async def ping_elfa_ai_api(self) -> dict :
         """
         Ping the Elfa AI API.
